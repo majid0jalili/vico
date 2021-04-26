@@ -12,8 +12,10 @@ import Landing from './Components/Landing'
 import EventCreate from './Components/EventCreate'
 import MyEvents from './Components/MyEvents'
 import CoincertAbout from './Components/CoincertAbout'
+import Gallery from './Components/Gallery'
+import Market from './Components/Market'
 import Web3 from 'web3'
-import MetamaskNotEnabled from './Components/MetamaskNotEnabled'
+import MetamaskNotEnabled from './Components/MetaMaskNotEnabled'
 import EventAbout from './Components/EventAbout'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -63,6 +65,8 @@ class App extends Component {
           <Route path="/EventStreamerHost" component={EventStreamerHost}/>
           <Route path="/EventCreate" component={EventCreate}/>
           <Route path="/EventAbout" component={EventAbout}/>
+          <Route path="/Gallery" component={Gallery}/>
+          <Route path="/Market" component={Market}/>
           <Route path="/CoincertAbout" component={CoincertAbout}/>
         </Switch>
         </Router>

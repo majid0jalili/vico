@@ -32,6 +32,8 @@ class NavBar extends React.Component {
             <Nav.Link href="/MyEvents">MyEvents</Nav.Link>
             <Nav.Link href="/EventCreate">Create Event</Nav.Link>
             <Nav.Link href="/CoincertAbout">About</Nav.Link>
+            <Nav.Link href="/Gallery">Gallery</Nav.Link>
+            <Nav.Link href="/Market">Market</Nav.Link>
           </Nav>
           <Form inline>
             <Form.Control type="text" placeholder="Search Event Token ID" className="mr-sm-2" onChange={this.handleTokenIDChange} />
