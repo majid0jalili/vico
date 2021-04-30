@@ -73,6 +73,7 @@ class EventCreate extends React.Component {
   }
 
   contractCreateEvent(event) {
+    console.log("Submit started");
     this.enableMetamask();
     let token_uri = {
       event_name: this.state.event_name,

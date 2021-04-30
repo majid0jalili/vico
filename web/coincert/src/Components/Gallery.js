@@ -3,6 +3,9 @@ import ReactDOM from "react-dom";
 import Form from "react-bootstrap/Form";
 import ImageGallery from "react-image-gallery";
 import "react-image-gallery/styles/css/image-gallery.css";
+import { CloudinaryContext, Transformation, Image } from "cloudinary-react";
+import axios from "axios";
+
 import Web3 from "web3";
 import {
   EVENT_CONTRACT_ABI,
@@ -11,6 +14,8 @@ import {
 
 const PREFIX_URL =
   "https://raw.githubusercontent.com/xiaolin/react-image-gallery/master/static/";
+
+const PREFIX_URL2 = "https://res.cloudinary.com/ut-austin/image/upload/";
 
 class Gallery extends React.Component {
   constructor() {
@@ -36,6 +41,13 @@ class Gallery extends React.Component {
       account: null,
       web3: null,
       contract: null,
+      event_name: "Event122",
+      event_capacity: 10,
+      createdEventID: "1231231",
+      date: "04/04/2022",
+      start_time: "10:10PM",
+      end_time: "10:20PM",
+      gallery: [],
     };
     //Majid
     this.images = [
@@ -55,11 +67,11 @@ class Gallery extends React.Component {
         thumbnailClass: "featured-thumb",
         description: "This is for 100ETH",
       },
-    ];
-    //.concat(this._getStaticImages());
+    ].concat(this._getStaticImages());
     this.handlePriceChange = this.handlePriceChange.bind(this);
     this.contractCreateEvent = this.contractCreateEvent.bind(this);
   }
+
   enableMetamask = () => {
     window.ethereum.enable();
   };
@@ -69,6 +81,20 @@ class Gallery extends React.Component {
     //return int.from_bytes(sha3.keccak_256(token_uri.encode('utf-8')).digest(), byteorder="big", signed=False)
   }
 
+  componentDidMount() {
+    console.log("********** componentDidMount");
+    this.loadBlockchainData();
+    axios
+      .get("https://res.cloudinary.com/ut-austin/image/list/aaa.json")
+      .then((res) => {
+        console.log("res.data.resources ", res.data.resources);
+
+        this.setState({ gallery: res.data.resources });
+        console.log("this.state.gallery ", this.state.gallery);
+        console.log("this.state.gallery ", this.state.gallery.length);
+      });
+  }
+
   async loadBlockchainData() {
     const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
     const accounts = await web3.eth.getAccounts();
@@ -76,16 +102,21 @@ class Gallery extends React.Component {
     const contract = await new web3.eth.Contract(
       EVENT_CONTRACT_ABI,
       EVENT_CONTRACT_ADDRESS,
-      { from: account, gas: 1500000, gasPrice: "20000000000" }
+      { from: account, gas: 2300000, gasPrice: "20000000000" }
     );
     //const events = await web3.eth.get
     this.setState({ account: account, web3: web3, contract: contract });
   }
 
   contractCreateEvent(event) {
+    console.log("Gallery Submit started", this.state.event_price);
     this.enableMetamask();
     let token_uri = {
+      event_name: this.state.event_name,
       price: this.state.event_price,
+      date: this.state.date,
+      start_time: this.state.start_time,
+      end_time: this.state.end_time,
       version: 1,
     };
     let capacity = this.state.event_capacity;
@@ -121,6 +152,13 @@ class Gallery extends React.Component {
       console.log("Error" + error);
     }
     event.preventDefault();
+    ///Let's remove the picture
+    let idx = this._imageGallery.getCurrentIndex();
+    var array = [...this.state.gallery];
+    if (idx !== -1) {
+      array.splice(idx, 1);
+      this.setState({ gallery: array });
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -178,13 +216,18 @@ class Gallery extends React.Component {
 
   _getStaticImages() {
     let images = [];
-    for (let i = 2; i < 4; i++) {
+    for (let i = 0; i < this.state.gallery.length; i++) {
+      console.log(
+        "Gallery _getStaticImages ",
+        i,
+        this.state.gallery[i].public_id
+      );
       images.push({
-        original: `${PREFIX_URL}${i}.jpg`,
-        thumbnail: `${PREFIX_URL}${i}t.jpg`,
+        original: `${PREFIX_URL2}${this.state.gallery[i].public_id}.jpg`,
+        thumbnail: `${PREFIX_URL2}${this.state.gallery[i].public_id}.jpg`,
       });
     }
-
+    console.log("images _getStaticImages ", images);
     return images;
   }
 
@@ -253,54 +296,93 @@ class Gallery extends React.Component {
   }
 
   handlePriceChange(event) {
+    console.log("Gallery handlePriceChange");
     this.setState({ event_price: event.target.value });
   }
 
   render() {
+    console.log("Images before", this.images);
+    this.images = this._getStaticImages();
+    console.log("Images after", this.images);
     return (
-      <section className="app">
-        <ImageGallery
-          ref={(i) => (this._imageGallery = i)}
-          items={this.images}
-          lazyLoad={false}
-          onClick={this._onImageClick.bind(this)}
-          onImageLoad={this._onImageLoad}
-          onSlide={this._onSlide.bind(this)}
-          onPause={this._onPause.bind(this)}
-          onScreenChange={this._onScreenChange.bind(this)}
-          onPlay={this._onPlay.bind(this)}
-          infinite={this.state.infinite}
-          showBullets={this.state.showBullets}
-          showFullscreenButton={
-            this.state.showFullscreenButton &&
-            this.state.showGalleryFullscreenButton
-          }
-          showPlayButton={
-            this.state.showPlayButton && this.state.showGalleryPlayButton
-          }
-          showThumbnails={this.state.showThumbnails}
-          showIndex={this.state.showIndex}
-          showNav={this.state.showNav}
-          isRTL={this.state.isRTL}
-          thumbnailPosition={this.state.thumbnailPosition}
-          slideDuration={parseInt(this.state.slideDuration)}
-          slideInterval={parseInt(this.state.slideInterval)}
-          slideOnThumbnailOver={this.state.slideOnThumbnailOver}
-          additionalClass="app-image-gallery"
-          useWindowKeyDown={this.state.useWindowKeyDown}
-        />
-        <Form onSubmit={this.contractCreateEvent}></Form>
-        <Form.Label>
-          Price (in ETH):
-          <Form.Control
-            type="number"
-            value={this.state.event_price}
-            onChange={this.handlePriceChange}
+      <Form onSubmit={this.contractCreateEvent}>
+        <section className="app">
+          <ImageGallery
+            ref={(i) => (this._imageGallery = i)}
+            items={this.images}
+            lazyLoad={false}
+            onClick={this._onImageClick.bind(this)}
+            onImageLoad={this._onImageLoad}
+            onSlide={this._onSlide.bind(this)}
+            onPause={this._onPause.bind(this)}
+            onScreenChange={this._onScreenChange.bind(this)}
+            onPlay={this._onPlay.bind(this)}
+            infinite={this.state.infinite}
+            showBullets={this.state.showBullets}
+            showFullscreenButton={
+              this.state.showFullscreenButton &&
+              this.state.showGalleryFullscreenButton
+            }
+            showPlayButton={
+              this.state.showPlayButton && this.state.showGalleryPlayButton
+            }
+            showThumbnails={this.state.showThumbnails}
+            showIndex={this.state.showIndex}
+            showNav={this.state.showNav}
+            isRTL={this.state.isRTL}
+            thumbnailPosition={this.state.thumbnailPosition}
+            slideDuration={parseInt(this.state.slideDuration)}
+            slideInterval={parseInt(this.state.slideInterval)}
+            slideOnThumbnailOver={this.state.slideOnThumbnailOver}
+            additionalClass="app-image-gallery"
+            useWindowKeyDown={this.state.useWindowKeyDown}
           />
-        </Form.Label>
-        <Form.Control type="submit" value="Submit" />
-        <h1>{this.state.createdEventID}</h1>
-      </section>
+          <Form onSubmit={this.contractCreateEvent}></Form>
+          <Form.Label>
+            Price (in ETH):
+            <Form.Control
+              type="number"
+              value={this.state.event_price}
+              onChange={this.handlePriceChange}
+            />
+          </Form.Label>
+          ,
+          <Form.Control type="submit" value="Submit" />
+          <h1>{this.state.createdEventID}</h1>
+        </section>
+      </Form> /*,
+      (
+        <div className="main">
+          <h1>Galleria</h1>
+          <div className="gallery">
+            <CloudinaryContext cloudName="ut-austin">
+              {this.state.gallery.map((data) => {
+                return (
+                  <div className="responsive" key={data.public_id}>
+                    <div className="img">
+                      <a
+                        target="_blank"
+                        href={`https://res.cloudinary.com/ut-austin/image/upload/${data.public_id}.jpg`}
+                      >
+                        <Image publicId={data.public_id}>
+                          <Transformation
+                            crop="scale"
+                            width="300"
+                            height="200"
+                            dpr="auto"
+                            responsive_placeholder="blank"
+                          />
+                        </Image>
+                      </a>
+                      <div className="desc">Created at {data.created_at}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </CloudinaryContext>
+          </div>
+        </div>
+      )*/
     );
   }
 }
