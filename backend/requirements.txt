@@ -1,0 +1,8 @@
+web3
+flask
+flask-restplus
+py-solc
+flask-restful
+flask-marshmallow
+solc-select
+Werkzeug==0.16.1
