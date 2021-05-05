@@ -15,7 +15,7 @@ user = api.namespace('user', description='User management')
 appl = api.namespace('appl', description='Application management')
 
 create_application_instance = reqparse.RequestParser()
-create_application_instance.add_argument('admin_name', required=True, default="Piyush",
+create_application_instance.add_argument('admin_name', required=True, default="Maohua",
     help='Admin name instance', location='args')
 
 application_instance = {}
@@ -54,31 +54,6 @@ class Application():
           # "private_key":
           # "chainId": 4 //remember to change this
         }
-        # signed_txn = w3.eth.account.signTransaction()
-
-            # var privKey = new Buffer(privateKey, 'hex');
-            # var tx = new Tx(rawTransaction);
-
-            # tx.sign(privKey);
-            # var serializedTx = tx.serialize();
-
-            # web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), function(err, hash) {
-            #   if (!err)
-            #       {
-            #         console.log('Txn Sent and hash is '+hash);
-            #       }
-            #   else
-            #       {
-            #         console.error(err);
-            #       }
-            # });
-
-        # signed_txn = w3.eth.account.signTransaction(dict(
-        #     gasPrice = w3.eth.gasPrice,
-        #     gas = 100000,
-        #     to=address,
-        #     value=web3.toWei(10,'ether')
-        #   ))
 
         w3.eth.sendTransaction(transaction)
 
@@ -99,7 +74,7 @@ class Application():
             # tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
             # print("Tx receipt = {0}".format(tx_receipt))
             # print("Tx receipt logs = {0}".format(tx_receipt.logs))
-            # print("piyush return value " + x)
+            # print("Maohua return value " + x)
             # print("Got email and phone {0}, {1}".format(email, phone))
 
             user_map[user_address] = {
@@ -185,7 +160,7 @@ class GetApplication(Resource):
             status=200, mimetype='application/json')
 
 upgrade_contract = api.model('upgrade_contract', {
-    'admin_name': fields.String(required=True, description='Admin name', default="Piyush"),
+    'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'file_name': fields.String(required=True, description='New contract file name', default="EventV2.sol"),
     'new_contract_name': fields.String(required=True, default="EventV2", description='New contract name'),
 })
@@ -238,7 +213,7 @@ class UpgradeContract(Resource):
         return resp
 
 create_user = api.model('create_user', {
-    'admin_name': fields.String(required=True, description='Admin name', default="Piyush"),
+    'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'password': fields.String(required=True, default="rePurpose1234", description='Password'),
     'phone': fields.String(default="1-XXX-XXXXXXX", description='Phone number'),
     'email': fields.String(required=True, default="josh@gmail.com", description='Email')
@@ -300,7 +275,7 @@ class CreateUser(Resource):
         return resp
 
 list_users_request = reqparse.RequestParser()
-list_users_request.add_argument('admin_name', required=True, default="Piyush",
+list_users_request.add_argument('admin_name', required=True, default="Maohua",
     help='Admin name', location='args')
 
 @user.route('/list_users')
@@ -324,7 +299,7 @@ class ListParties(Resource):
         return resp
 
 create_event_request = api.model('create_event_request', {
-    'admin_name': fields.String(required=True, description='Admin name', default="Piyush"),
+    'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'event_creator': fields.String(required=True, default="0x1F0a4a146776ECC2a3e52F6700901b51aE528bBC", description='Minter address'),
     'capacity': fields.Integer(required=True, default=1000, description='Capacity of event'),
     'token_uri': fields.Nested(api.model('token_uri', {
@@ -380,7 +355,7 @@ class CreateEvent(Resource):
 
 
 filter_tokens_request = api.model('filter_tokens_request', {
-    'admin_name': fields.String(required=True, description='Admin name', default="Piyush"),
+    'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'token_filter': fields.Nested(api.model('filter', {
         'version': fields.Integer(required=False, default=1, description='Version of the URI')
     }))
@@ -433,7 +408,7 @@ class GetEvent(Resource):
         token_id = int(coin_id, 16)
         print("Token id {0}".format(token_id))
 
-        app = application_instance["Piyush"]
+        app = application_instance["Maohua"]
 
         if not app.proxy_contract_with_bytecode:
             print("Implementation contract not deployed yet!")
@@ -481,7 +456,7 @@ class Transaction(Resource):
         return resp
 
 send_tokens = api.model('send_tokens', {
-    'admin_name': fields.String(required=True, description='Admin name', default="Piyush"),
+    'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'from_address': fields.String(required=True, default="0x1F0a4a146776ECC2a3e52F6700901b51aE528bBC", description='Sender address'),
     'to_address': fields.String(required=True, default="0x1F0a4a146776ECC2a3e52F6700901b51aE528bBC", description='Receiver address'),
     'share': fields.Integer(required=True, default=5, description='Specify share out of 1000 units')
@@ -519,7 +494,7 @@ class SendEventTicket(Resource):
         return resp
 
 buy_tokens = api.model('buy_tokens', {
-    'admin_name': fields.String(required=True, description='Admin name', default="Piyush"),
+    'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'from_address': fields.String(required=True, default="0x1F0a4a146776ECC2a3e52F6700901b51aE528bBC", description='Buyer address'),
     'share': fields.Integer(required=True, default=5, description='Specify share out of 1000 units')
 })
@@ -555,7 +530,7 @@ class BuyEventTicket(Resource):
         return resp
 
 set_url = api.model('set_url', {
-    'admin_name': fields.String(required=True, description='Admin name', default="Piyush"),
+    'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'url': fields.String(required=True, description='URL', default="https://youtube.com"),
     'owner_address': fields.String(required=True, description='host address', default=""),
 })
@@ -596,7 +571,7 @@ class GetEventUrl(Resource):
         token_id = int(coin_id, 16)
         print("Token id {0}".format(token_id))
 
-        app = application_instance["Piyush"]
+        app = application_instance["Maohua"]
 
         if not app.proxy_contract_with_bytecode:
             print("Implementation contract not deployed yet!")
