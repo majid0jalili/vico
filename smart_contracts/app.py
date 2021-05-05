@@ -130,7 +130,7 @@ class CreateApplication(Resource):
         app.owner_id = app.w3.eth.accounts[0]
         app.w3.eth.defaultAccount = app.owner_id
 
-        bytecode_impl, abi_impl = compile_contract(['Event.sol'], 'Event.sol', 'EventV1')
+        bytecode_impl, abi_impl = compile_contract(['market.sol'], 'market.sol', 'TradeProxy')
 
         RecycleContract_impl = app.w3.eth.contract(abi=abi_impl, bytecode=bytecode_impl)
 
@@ -155,7 +155,7 @@ class CreateApplication(Resource):
 
         app.impl_contract_address = new_impl_contract_address
 
-        bytecode, abi = compile_contract(['Event.sol'], 'Event.sol', 'EventProxy')
+        bytecode, abi = compile_contract(['market.sol'], 'market.sol', 'PlatformProxy')
         RecycleContract = app.w3.eth.contract(abi=abi, bytecode=bytecode)
         tx_hash = RecycleContract.constructor(app.impl_contract_address, app.owner_id, b'').transact()
         tx_receipt = app.w3.eth.waitForTransactionReceipt(tx_hash)
