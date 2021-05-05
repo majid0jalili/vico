@@ -16,12 +16,14 @@ appl = api.namespace('appl', description='Application management')
 
 create_application_instance = reqparse.RequestParser()
 create_application_instance.add_argument('admin_name', required=True, default="Maohua",
-    help='Admin name instance', location='args')
+                                         help='Admin name instance', location='args')
 
 application_instance = {}
 
+
 def get_token_id(token_uri):
     return int.from_bytes(sha3.keccak_256(token_uri.encode('utf-8')).digest(), byteorder="big", signed=False)
+
 
 class Application():
     def __init__(self):
@@ -42,17 +44,17 @@ class Application():
         # Bug in ganache-cli, doesn't accept two arguments, duration=None also doesn't work
 
         print("Created address {0}".format(address))
-        gasLimit = 3000000;
+        gasLimit = 3000000
         w3.geth.personal.unlockAccount(address, password, None)
         transaction = {
-          "from": w3.eth.accounts[0],
-          # "nonce": web3.toHex(1),
-          # "gasPrice": w3.toHex(w3.eth.gasPrice * 1e9),
-          "gasLimit": w3.toHex(gasLimit),
-          "to": address,
-          "value": w3.toWei(10,'ether'),
-          # "private_key":
-          # "chainId": 4 //remember to change this
+            "from": w3.eth.accounts[0],
+            # "nonce": web3.toHex(1),
+            # "gasPrice": w3.toHex(w3.eth.gasPrice * 1e9),
+            "gasLimit": w3.toHex(gasLimit),
+            "to": address,
+            "value": w3.toWei(10, 'ether'),
+            # "private_key":
+            # "chainId": 4 //remember to change this
         }
 
         w3.eth.sendTransaction(transaction)
@@ -69,7 +71,8 @@ class Application():
 
             # tx_hash = self.proxy_contract_with_bytecode.functions.getUserDetails(user_address).call()
             # tx_hash = self.proxy_contract_with_bytecode.functions.getUserDetails(user_address).call()
-            email, phone = self.proxy_contract_with_bytecode.functions.getUserDetails(user_address).call()
+            email, phone = self.proxy_contract_with_bytecode.functions.getUserDetails(
+                user_address).call()
             # print("Tx hash {0}".format(tx_hash))
             # tx_receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
             # print("Tx receipt = {0}".format(tx_receipt))
@@ -84,6 +87,7 @@ class Application():
 
         print("User map {0}".format(user_map))
         return user_map
+
 
 @appl.route('/create_application')
 class CreateApplication(Resource):
@@ -105,14 +109,17 @@ class CreateApplication(Resource):
         app.owner_id = app.w3.eth.accounts[0]
         app.w3.eth.defaultAccount = app.owner_id
 
-        bytecode_impl, abi_impl = compile_contract(['market.sol'], 'market.sol', 'TradeProxy')
+        bytecode_impl, abi_impl = compile_contract(
+            ['market.sol'], 'market.sol', 'TradeProxy')
 
-        RecycleContract_impl = app.w3.eth.contract(abi=abi_impl, bytecode=bytecode_impl)
+        RecycleContract_impl = app.w3.eth.contract(
+            abi=abi_impl, bytecode=bytecode_impl)
 
         tx_hash = RecycleContract_impl.constructor().transact()
         tx_receipt = app.w3.eth.waitForTransactionReceipt(tx_hash)
         new_impl_contract_address = tx_receipt.contractAddress
-        print("Created Implementation contract address {0}".format(new_impl_contract_address))
+        print("Created Implementation contract address {0}".format(
+            new_impl_contract_address))
         print("Tx receipt = {0}".format(tx_receipt))
         print("Tx receipt logs = {0}".format(tx_receipt.logs))
 
@@ -130,9 +137,11 @@ class CreateApplication(Resource):
 
         app.impl_contract_address = new_impl_contract_address
 
-        bytecode, abi = compile_contract(['market.sol'], 'market.sol', 'PlatformProxy')
+        bytecode, abi = compile_contract(
+            ['market.sol'], 'market.sol', 'PlatformProxy')
         RecycleContract = app.w3.eth.contract(abi=abi, bytecode=bytecode)
-        tx_hash = RecycleContract.constructor(app.impl_contract_address, app.owner_id, b'').transact()
+        tx_hash = RecycleContract.constructor(
+            app.impl_contract_address, app.owner_id, b'').transact()
         tx_receipt = app.w3.eth.waitForTransactionReceipt(tx_hash)
         contract_address = tx_receipt.contractAddress
         print("Created contract address {0}".format(contract_address))
@@ -140,9 +149,12 @@ class CreateApplication(Resource):
         print("Tx receipt logs = {0}".format(tx_receipt.logs))
 
         app.contract_address = contract_address
-        app.contract = app.w3.eth.contract(address=contract_address, abi=abi, bytecode=bytecode)
-        app.proxy_contract_with_bytecode = app.w3.eth.contract(address=app.contract_address, abi=abi_impl, bytecode=bytecode)
+        app.contract = app.w3.eth.contract(
+            address=contract_address, abi=abi, bytecode=bytecode)
+        app.proxy_contract_with_bytecode = app.w3.eth.contract(
+            address=app.contract_address, abi=abi_impl, bytecode=bytecode)
         # app.proxy_contract_with_bytecode = app.contract
+
 
 @appl.route('/<string:admin_name>')
 class GetApplication(Resource):
@@ -159,11 +171,13 @@ class GetApplication(Resource):
                 }),
             status=200, mimetype='application/json')
 
+
 upgrade_contract = api.model('upgrade_contract', {
     'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'file_name': fields.String(required=True, description='New contract file name', default="EventV2.sol"),
     'new_contract_name': fields.String(required=True, default="EventV2", description='New contract name'),
 })
+
 
 @appl.route('/upgrade_contract')
 class UpgradeContract(Resource):
@@ -187,16 +201,19 @@ class UpgradeContract(Resource):
         app = application_instance[admin_name]
         app.w3.eth.defaultAccount = app.owner_id
 
-        bytecode, abi = compile_contract([file_name], file_name, new_contract_name)
+        bytecode, abi = compile_contract(
+            [file_name], file_name, new_contract_name)
 
         RecycleContract = app.w3.eth.contract(abi=abi, bytecode=bytecode)
 
         tx_hash = RecycleContract.constructor().transact()
         tx_receipt = app.w3.eth.waitForTransactionReceipt(tx_hash)
         new_impl_contract_address = tx_receipt.contractAddress
-        print("Created new contract address {0}".format(new_impl_contract_address))
+        print("Created new contract address {0}".format(
+            new_impl_contract_address))
 
-        tx_hash = app.contract.functions.upgradeTo(new_impl_contract_address).transact()
+        tx_hash = app.contract.functions.upgradeTo(
+            new_impl_contract_address).transact()
         tx_receipt = app.w3.eth.waitForTransactionReceipt(tx_hash)
         print("Tx receipt = {0}".format(tx_receipt))
         print("Tx receipt logs = {0}".format(tx_receipt.logs))
@@ -205,12 +222,14 @@ class UpgradeContract(Resource):
             raise BadRequest("Failed to upggrade contract")
 
         app.impl_contract_address = new_impl_contract_address
-        app.proxy_contract_with_bytecode = app.w3.eth.contract(address=app.contract_address, abi=abi, bytecode=bytecode)
+        app.proxy_contract_with_bytecode = app.w3.eth.contract(
+            address=app.contract_address, abi=abi, bytecode=bytecode)
         resp = Response(
             json.dumps({"impl_address": new_impl_contract_address}),
             status=200, mimetype='application/json')
 
         return resp
+
 
 create_user = api.model('create_user', {
     'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
@@ -219,6 +238,7 @@ create_user = api.model('create_user', {
     'email': fields.String(required=True, default="josh@gmail.com", description='Email')
     # 'user_type': fields.String(choices=("Processor", "Collector", "Donor"), help='Type of user')
 })
+
 
 @user.route('')
 class CreateUser(Resource):
@@ -246,7 +266,8 @@ class CreateUser(Resource):
         # w3 = Web3(Web3.HTTPProvider("http://localhost:8545"))
         app.w3.eth.defaultAccount = address
 
-        print("Adding user details {0} and {1} for {2}".format(email, phone, address))
+        print("Adding user details {0} and {1} for {2}".format(
+            email, phone, address))
         if not email:
             email = ""
 
@@ -257,7 +278,8 @@ class CreateUser(Resource):
             print("Implementation contract not deployed yet!")
             raise BadRequest("Implementation contract not deployed yet!")
 
-        tx_hash = app.proxy_contract_with_bytecode.functions.insertUserDetails(email, phone).transact()
+        tx_hash = app.proxy_contract_with_bytecode.functions.insertUserDetails(
+            email, phone).transact()
         print("Tx hash {0}".format(tx_hash))
         tx_receipt = app.w3.eth.waitForTransactionReceipt(tx_hash)
         print("Tx receipt = {0}".format(tx_receipt))
@@ -274,9 +296,11 @@ class CreateUser(Resource):
 
         return resp
 
+
 list_users_request = reqparse.RequestParser()
 list_users_request.add_argument('admin_name', required=True, default="Maohua",
-    help='Admin name', location='args')
+                                help='Admin name', location='args')
+
 
 @user.route('/list_users')
 class ListParties(Resource):
@@ -298,6 +322,7 @@ class ListParties(Resource):
             status=200, mimetype='application/json')
         return resp
 
+
 create_event_request = api.model('create_event_request', {
     'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'event_creator': fields.String(required=True, default="0x1F0a4a146776ECC2a3e52F6700901b51aE528bBC", description='Minter address'),
@@ -308,6 +333,7 @@ create_event_request = api.model('create_event_request', {
         'price': fields.Float(required=True, default=10.5, description='Price of a ticket')
     }))
 })
+
 
 @event.route('')
 class CreateEvent(Resource):
@@ -341,10 +367,10 @@ class CreateEvent(Resource):
             print("Implementation contract not deployed yet!")
             raise BadRequest("Implementation contract not deployed yet!")
 
-        tx_hash = app.proxy_contract_with_bytecode.functions.mintWithTokenURI(capacity, get_token_id(token_uri), token_uri, price).transact()
+        tx_hash = app.proxy_contract_with_bytecode.functions.mintWithTokenURI(
+            capacity, get_token_id(token_uri), token_uri, price).transact()
         tx_receipt = app.w3.eth.waitForTransactionReceipt(tx_hash)
         print("Tx receipt = {0}".format(tx_receipt))
-
 
         print("Tx hash {0}".format(tx_hash))
         resp = Response(
@@ -360,6 +386,7 @@ filter_tokens_request = api.model('filter_tokens_request', {
         'version': fields.Integer(required=False, default=1, description='Version of the URI')
     }))
 })
+
 
 @user.route('/<string:address>/filter_tokens')
 class FilterTokens(Resource):
@@ -382,12 +409,14 @@ class FilterTokens(Resource):
             print("Implementation contract not deployed yet!")
             raise BadRequest("Implementation contract not deployed yet!")
 
-        token_ids = app.proxy_contract_with_bytecode.functions.getOwnerTokens(address).call()
+        token_ids = app.proxy_contract_with_bytecode.functions.getOwnerTokens(
+            address).call()
         print("Token ids - {0}".format(token_ids))
 
         resp = []
         for token_id in token_ids:
-            token_uri = app.proxy_contract_with_bytecode.functions.tokenURI(token_id).call()
+            token_uri = app.proxy_contract_with_bytecode.functions.tokenURI(
+                token_id).call()
             resp.append({
                 "token_uri": json.loads(token_uri),
                 "share": app.proxy_contract_with_bytecode.functions.getTokenShare(token_id, address).call()
@@ -414,14 +443,16 @@ class GetEvent(Resource):
             print("Implementation contract not deployed yet!")
             raise BadRequest("Implementation contract not deployed yet!")
 
-        owner_addresses = app.proxy_contract_with_bytecode.functions.getTokenOwners(token_id).call()
+        owner_addresses = app.proxy_contract_with_bytecode.functions.getTokenOwners(
+            token_id).call()
         print("Owner addresses - {0}".format(owner_addresses))
-        token_uri = app.proxy_contract_with_bytecode.functions.tokenURI(token_id).call()
+        token_uri = app.proxy_contract_with_bytecode.functions.tokenURI(
+            token_id).call()
 
         resp = {
-                "owners": [
-                ],
-                "token_uri": json.loads(token_uri)
+            "owners": [
+            ],
+            "token_uri": json.loads(token_uri)
         }
 
         user_map = app.get_user_map()
@@ -440,6 +471,7 @@ class GetEvent(Resource):
             resp_json,
             status=200, mimetype='application/json')
 
+
 @transaction.route('/<tx_hash>')
 class Transaction(Resource):
     # Make this async api
@@ -455,12 +487,14 @@ class Transaction(Resource):
 
         return resp
 
+
 send_tokens = api.model('send_tokens', {
     'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'from_address': fields.String(required=True, default="0x1F0a4a146776ECC2a3e52F6700901b51aE528bBC", description='Sender address'),
     'to_address': fields.String(required=True, default="0x1F0a4a146776ECC2a3e52F6700901b51aE528bBC", description='Receiver address'),
     'share': fields.Integer(required=True, default=5, description='Specify share out of 1000 units')
 })
+
 
 @event.route('/<string:coin_id>/send')
 class SendEventTicket(Resource):
@@ -480,12 +514,14 @@ class SendEventTicket(Resource):
         app = application_instance[admin_name]
         app.w3.eth.defaultAccount = from_address
 
-        print("Transferring {0} from {1} to {2}".format(share, from_address, to_address))
+        print("Transferring {0} from {1} to {2}".format(
+            share, from_address, to_address))
         if not app.proxy_contract_with_bytecode:
             print("Implementation contract not deployed yet!")
             raise BadRequest("Implementation contract not deployed yet!")
 
-        tx_hash = app.proxy_contract_with_bytecode.functions.transferShareFrom(to_address, token_id, int(share)).transact()
+        tx_hash = app.proxy_contract_with_bytecode.functions.transferShareFrom(
+            to_address, token_id, int(share)).transact()
 
         resp = Response(
             json.dumps({"tx_hash": tx_hash.hex()}),
@@ -493,11 +529,13 @@ class SendEventTicket(Resource):
 
         return resp
 
+
 buy_tokens = api.model('buy_tokens', {
     'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'from_address': fields.String(required=True, default="0x1F0a4a146776ECC2a3e52F6700901b51aE528bBC", description='Buyer address'),
     'share': fields.Integer(required=True, default=5, description='Specify share out of 1000 units')
 })
+
 
 @event.route('/<string:coin_id>/buy')
 class BuyEventTicket(Resource):
@@ -516,12 +554,14 @@ class BuyEventTicket(Resource):
         app = application_instance[admin_name]
         app.w3.eth.defaultAccount = from_address
 
-        print("Buying {0} tickets for {1} for token id {2}".format(share, from_address, token_id))
+        print("Buying {0} tickets for {1} for token id {2}".format(
+            share, from_address, token_id))
         if not app.proxy_contract_with_bytecode:
             print("Implementation contract not deployed yet!")
             raise BadRequest("Implementation contract not deployed yet!")
 
-        tx_hash = app.proxy_contract_with_bytecode.functions.purchaseToken(token_id, int(share)).transact()
+        tx_hash = app.proxy_contract_with_bytecode.functions.purchaseToken(
+            token_id, int(share)).transact()
 
         resp = Response(
             json.dumps({"tx_hash": tx_hash.hex()}),
@@ -529,11 +569,13 @@ class BuyEventTicket(Resource):
 
         return resp
 
+
 set_url = api.model('set_url', {
     'admin_name': fields.String(required=True, description='Admin name', default="Maohua"),
     'url': fields.String(required=True, description='URL', default="https://youtube.com"),
     'owner_address': fields.String(required=True, description='host address', default=""),
 })
+
 
 @event.route('/<string:coin_id>/set_url')
 class SetUrl(Resource):
@@ -556,13 +598,15 @@ class SetUrl(Resource):
             print("Implementation contract not deployed yet!")
             raise BadRequest("Implementation contract not deployed yet!")
 
-        tx_hash = app.proxy_contract_with_bytecode.functions.setURL(token_id, url).transact()
+        tx_hash = app.proxy_contract_with_bytecode.functions.setURL(
+            token_id, url).transact()
 
         resp = Response(
             json.dumps({"tx_hash": tx_hash.hex()}),
             status=200, mimetype='application/json')
 
         return resp
+
 
 @event.route('/<string:coin_id>/url')
 class GetEventUrl(Resource):
@@ -577,10 +621,11 @@ class GetEventUrl(Resource):
             print("Implementation contract not deployed yet!")
             raise BadRequest("Implementation contract not deployed yet!")
 
-        url = app.proxy_contract_with_bytecode.functions.getURL(token_id).call()
+        url = app.proxy_contract_with_bytecode.functions.getURL(
+            token_id).call()
 
         resp = {
-                "url": url
+            "url": url
         }
 
         resp_json = json.dumps(resp)
@@ -589,6 +634,7 @@ class GetEventUrl(Resource):
         return Response(
             resp_json,
             status=200, mimetype='application/json')
+
 
 def compile_contract(contract_source_files, contractFileName, contractName=None, **kwargs):
     """
@@ -604,7 +650,7 @@ def compile_contract(contract_source_files, contractFileName, contractName=None,
         "settings": {
             "outputSelection": {
                 '*': {
-                    '*': [ "*" ]
+                    '*': ["*"]
                 }
             },
             "libraries": kwargs.get("libraries", {})
@@ -612,7 +658,7 @@ def compile_contract(contract_source_files, contractFileName, contractName=None,
     }
 
     for contract_source_file in contract_source_files:
-        f = open(contract_source_file,"r")
+        f = open(contract_source_file, "r")
         compiler_input["sources"][contract_source_file] = {
             "content": f.read()
         }
@@ -621,10 +667,12 @@ def compile_contract(contract_source_files, contractFileName, contractName=None,
     # TODO: Fix the allowed paths
     import os
     print("Got kwargs {0}".format(kwargs))
-    compiled_sol = compile_standard(compiler_input, allow_paths="{0}/@openzeppelin/".format(os.getcwd())) # Compiled source code
+    compiled_sol = compile_standard(
+        compiler_input, allow_paths="{0}/@openzeppelin/".format(os.getcwd()))  # Compiled source code
     # print("Compiled bytecode {0}".format(compiled_sol['contracts'][contractFileName][contractName])) # [contractFileName][contractName]['evm']['bytecode']['object']
     bytecode = compiled_sol['contracts'][contractFileName][contractName]['evm']['bytecode']['object']
-    abi = json.loads(compiled_sol['contracts'][contractFileName][contractName]['metadata'])['output']['abi']
+    abi = json.loads(compiled_sol['contracts'][contractFileName]
+                     [contractName]['metadata'])['output']['abi']
     return bytecode, abi
 
 
