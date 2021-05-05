@@ -4,6 +4,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721MetadataMintable.sol";
 import "@openzeppelin/upgrades/contracts/upgradeability/AdminUpgradeabilityProxy.sol";
 
 contract MarketStorage {
+
     struct User {
         bool valid;
         string id;
@@ -11,6 +12,7 @@ contract MarketStorage {
         uint256[] tokens;
         ContactInfo contact;
     }
+
     struct ContactInfo{
         string email;
         string phone;
@@ -78,14 +80,13 @@ contract TradeProxy is ERC721MetadataMintable, EventStorage {
 
         if (userExist)
             return true;
-        else {
-            platform.users[key].contact = value;
-            platform.users[key].addr = key;
-            platform.users[key].valid = 1;
-            platform.users[key].id = userCnt;
-            userCnt = UserCnt+1;
-            return false;
-        }
+
+        platform.users[key].contact = value;
+        platform.users[key].addr = key;
+        platform.users[key].valid = 1;
+        platform.users[key].id = userCnt;
+        userCnt = UserCnt+1;
+        return false;
     }
 
     function containsUser(address key) internal view returns (bool) {
@@ -104,15 +105,17 @@ contract TradeProxy is ERC721MetadataMintable, EventStorage {
     }
 
     function purchaseToken(uint256 tokenId, uint256 share) public {
-        if (share==1) {
-            address prevOwner = platform.tokenOwner[tokenId];
-            platform.tokenOwner[tokenId] = msg.sender;
-            users[msg.sender].tokens.push(tokenId);
-            for (uint i = index; i<platform.users[prevOwner].tokens.length-1; i++){
-                if(platform.users[prevOwner].tokens[i]==tokenId){
-                    delete array[i];
-                    return;
-                }
+        if (share!=1) {
+            return;
+        }
+
+        address prevOwner = platform.tokenOwner[tokenId];
+        platform.tokenOwner[tokenId] = msg.sender;
+        users[msg.sender].tokens.push(tokenId);
+        for (uint i = index; i<platform.users[prevOwner].tokens.length-1; i++){
+            if(platform.users[prevOwner].tokens[i]==tokenId){
+                delete array[i];
+                return;
             }
         }
     }
@@ -120,15 +123,16 @@ contract TradeProxy is ERC721MetadataMintable, EventStorage {
     function transferShareFrom(address to, uint256 tokenId, uint share) public {
         require(platform.tokenOwnersShares[tokenId][_msgSender()] >= share, "Cannot share more than owner's share");
         require(to != address(0), "Cannot transfer to the zero address");
-        if (share==1) {
-            address prevOwner = platform.tokenOwner[tokenId];
-            platform.tokenOwner[tokenId] = to;
-            users[to].tokens.push(tokenId);
-            for (uint i = index; i<platform.users[prevOwner].tokens.length-1; i++){
-                if(platform.users[prevOwner].tokens[i]==tokenId){
-                    delete array[i];
-                    return;
-                }
+        if (share!=1) {
+            return;
+        }
+        address prevOwner = platform.tokenOwner[tokenId];
+        platform.tokenOwner[tokenId] = to;
+        users[to].tokens.push(tokenId);
+        for (uint i = index; i<platform.users[prevOwner].tokens.length-1; i++){
+            if(platform.users[prevOwner].tokens[i]==tokenId){
+                delete array[i];
+                return;
             }
         }
     }
@@ -166,7 +170,6 @@ contract TradeProxy is ERC721MetadataMintable, EventStorage {
     function insertUserDetails(string memory email, string memory phone) public {
         require(containsUser(_msgSender()) == false, "The user details already exist.");
         insertUser(_msgSender(), ContactInfo({email: email, phone: phone}));
-
         emit addedUser(_msgSender());
     }
 
