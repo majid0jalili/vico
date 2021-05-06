@@ -119,7 +119,7 @@ class Gallery extends React.Component {
       end_time: this.state.end_time,
       version: 1,
     };
-    let capacity = this.state.event_capacity;
+    let capacity = 5;
     token_uri["event_creator"] = this.state.account;
     console.log("createEvent");
     let tokenID = this.getTokenID(token_uri);

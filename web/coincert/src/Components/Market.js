@@ -63,7 +63,6 @@ class Market extends Component {
           withCredentials={true}
           unique_filename={true}
           resourceType={"image"}
-          tags={("aaa", "bbb")}
         />
       </>
     );
